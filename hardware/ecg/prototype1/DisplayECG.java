@@ -32,7 +32,7 @@ public class DisplayECG extends JFrame implements Runnable,ActionListener {
 	
 	private static boolean AC_MODE = true;
 	
-	private static final float scale = 0.1f;
+	private static final double scale = 1000;
 	private int offset = 0;
 	
 	private Canvas canvas;
@@ -101,11 +101,11 @@ public class DisplayECG extends JFrame implements Runnable,ActionListener {
 		int x = 0, xm1;
 		int width = canvas.getWidth();
 		int height = canvas.getHeight();
-		int[] v = new int[width];
+		double[] v = new double[width];
 		int[] y = new int[width];
-		int[] movingAv = new int[256];
-		int sigmaMovingAv = 0;
-		int ma;
+		double[] movingAv = new double[256];
+		double sigmaMovingAv = 0;
+		double ma;
 		
 		while (true) {
 			
@@ -124,9 +124,9 @@ public class DisplayECG extends JFrame implements Runnable,ActionListener {
 			
 			
 			sigmaMovingAv -= movingAv[(x+1)%movingAv.length];
-			movingAv[x%movingAv.length] = v[x];
+			movingAv[x % movingAv.length] = v[x];
 			sigmaMovingAv += v[x];
-			ma = sigmaMovingAv / movingAv.length;
+			ma = sigmaMovingAv / (double)movingAv.length;
 			
 			if (AC_MODE) {
 				y[x] = height - (int)( (v[x] - ma) *scale) + offset;
@@ -155,12 +155,11 @@ public class DisplayECG extends JFrame implements Runnable,ActionListener {
 		}
 		
 	}
-	public int getADC ()  {
+	private double getADC ()  {
 		try {
 			String line = lnr.readLine();
 			String[] p = line.split("\\s");
-			double v = Double.parseDouble(p[1]);
-			return (int)(v*1000000);
+			return Double.parseDouble(p[1]);
 		} catch (Exception e) {
 			return -1;
 		}
