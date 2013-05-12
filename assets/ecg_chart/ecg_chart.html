@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<style>
+#chart {border:1px solid black;width:800px;height:600px;}
+</style>
+
+</head>
+
+<body>
+
+<div id="chart"></div>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.0/jquery.min.js"></script>
+<script src="ecg_chart.js"></script>
+<script>
+$("#chart").ecg_chart({
+});
+$("#chart").ecg_chart("start");
+
+var v = 100;
+
+setInterval (function() {
+	v += (Math.random()-0.5)*10;
+	$("#chart").ecg_chart("addData", v);
+}, 20);
+</script>
+
+</body>
+</html>
