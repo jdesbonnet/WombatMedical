@@ -24,10 +24,7 @@
 	var options;
 	var wrapperEl;
 	var svgEl;
-	var WIDTH = 800;
-	var HEIGHT = 600;
-	var svgWidth = 800;
-	var svgHeight = 600;
+
 
 	// Circular buffer
 	var dataLen = 0;
@@ -41,6 +38,7 @@
 		init : function( opts ) {
 			options = opts;
 			wrapperEl = this.get(0);
+			dataBufSize = options.bufferSize;
 			create();
 		},
 		addData : function (v) {
@@ -92,7 +90,7 @@
 				continue;
 			}
 			x = el.getAttribute("x");
-			x -= 5;
+			x -= (options.width/dataBufSize);
 			el.setAttribute("x",x);
 		}
 	}
@@ -101,9 +99,9 @@
 		// Create <SVG> element and append to wrapperEl (the HTML DIV place holder)
 		svgEl = document.createElementNS("http://www.w3.org/2000/svg", "svg");
 		svgEl.id = "svgCanvas";
-		svgEl.setAttribute("width",svgWidth); // was 320
-		svgEl.setAttribute("height",svgHeight);	
-		svgEl.setAttribute("viewBox","0 0 1280 720"); // TODO: use WIDTH, HEIGHT
+		svgEl.setAttribute("width",options.width);
+		svgEl.setAttribute("height",options.height);	
+		//svgEl.setAttribute("viewBox","0 0 1280 720"); // TODO: use WIDTH, HEIGHT
 		wrapperEl.appendChild(svgEl);
 		
 		// White background, so if all layers have overlapping transparent regions, 
@@ -111,13 +109,14 @@
 		var svgBgEl = document.createElementNS("http://www.w3.org/2000/svg", "rect");
 		svgBgEl.setAttribute("x",0);
 		svgBgEl.setAttribute("y",0); 
-		svgBgEl.setAttribute("width",WIDTH); 
-		svgBgEl.setAttribute("height",HEIGHT); 
+		svgBgEl.setAttribute("width",options.width); 
+		svgBgEl.setAttribute("height",options.height); 
 		svgBgEl.setAttribute("fill","white");
 		svgBgEl.setAttribute("stroke","none");
 		svgEl.appendChild(svgBgEl);
 
 		// Draw chart area
+		/*
 		var drawEl = document.createElementNS("http://www.w3.org/2000/svg", "rect");
 		drawEl.setAttribute("x",0);
 		drawEl.setAttribute("y",0);
@@ -126,6 +125,7 @@
 		drawEl.setAttribute("fill","none");
 		drawEl.setAttribute("stroke","black");
 		svgEl.appendChild(drawEl);
+		*/
 	}
 
 	function createDataPointEl (x,y) {
