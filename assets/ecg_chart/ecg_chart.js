@@ -32,6 +32,8 @@
 	var dataPtEls = [];
 	var dataBufSize = 100;
 
+	var chartX0, chartY0, chartWidth, chartHeight;
+
 	var scrollInterval;
 
 	var methods = {
@@ -46,11 +48,11 @@
 			var endPtr = (dataStartPtr + dataLen) % dataBufSize;
 			var el = dataPtEls[endPtr];
 			if (el==null) {
-				dataPtEls[endPtr] = createDataPointEl (800,v);
+				dataPtEls[endPtr] = createDataPointEl (chartX0+chartWidth,v);
 				svgEl.appendChild(dataPtEls[endPtr]);
 				dataLen++;
 			} else {
-				dataPtEls[endPtr].setAttribute("x",800);
+				dataPtEls[endPtr].setAttribute("x",chartX0+chartWidth-4);
 				dataPtEls[endPtr].setAttribute("y",v);
 			}
 			
@@ -82,6 +84,9 @@
 		}
 	};
 
+	/**
+	 * Time scroll chart by moving all points left.
+	 */
 	function scroll () {
 		var i;
 		for (i = 0; i < dataBufSize; i++) {
@@ -90,7 +95,7 @@
 				continue;
 			}
 			x = el.getAttribute("x");
-			x -= (options.width/dataBufSize);
+			x -= (chartWidth/dataBufSize);
 			el.setAttribute("x",x);
 		}
 	}
@@ -115,22 +120,26 @@
 		svgBgEl.setAttribute("stroke","none");
 		svgEl.appendChild(svgBgEl);
 
+		chartX0 = options.padding;
+		chartY0 = options.padding;
+		chartWidth = options.width - options.padding*2;
+		chartHeight = options.height - options.padding*2;
+
 		// Draw chart area
-		/*
+		
 		var drawEl = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-		drawEl.setAttribute("x",0);
-		drawEl.setAttribute("y",0);
-		drawEl.setAttribute("width",100); 
-		drawEl.setAttribute("height",100);
+		drawEl.setAttribute("x",chartX0);
+		drawEl.setAttribute("y",chartY0);
+		drawEl.setAttribute("width",chartWidth); 
+		drawEl.setAttribute("height",chartHeight);
 		drawEl.setAttribute("fill","none");
 		drawEl.setAttribute("stroke","black");
 		svgEl.appendChild(drawEl);
-		*/
 	}
 
 	function createDataPointEl (x,y) {
 		var ptEl = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-		ptEl.setAttribute("x",x);
+		ptEl.setAttribute("x",x-4);
 		ptEl.setAttribute("y",y); 
 		ptEl.setAttribute("width","4"); 
 		ptEl.setAttribute("height","4"); 
