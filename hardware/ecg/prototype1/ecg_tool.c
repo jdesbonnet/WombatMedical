@@ -34,24 +34,11 @@
 #define STREAM_START (0x12)
 #define STREAM_ESCAPE (0x7D)
 
-// Command definitions from ADS1x9x_USB_Communication.h
-#define START_DATA_HEADER			0x02
-#define WRITE_REG_COMMAND			0x91
-#define READ_REG_COMMAND			0x92
-#define DATA_STREAMING_COMMAND		0x93
-#define DATA_STREAMING_PACKET		0x93
-#define ACQUIRE_DATA_COMMAND		0x94
-#define ACQUIRE_DATA_PACKET 		0x94
-#define PROC_DATA_DOWNLOAD_COMMAND	0x95
-#define DATA_DOWNLOAD_COMMAND		0x96
-#define FIRMWARE_UPGRADE_COMMAND	0x97catccc
-#define START_RECORDING_COMMAND		0x98
-#define FIRMWARE_VERSION_REQ		0x99
-#define STATUS_INFO_REQ 			0x9A
-#define FILTER_SELECT_COMMAND		0x9B
-#define ERASE_MEMORY_COMMAND		0x9C
-#define RESTART_COMMAND				0x9D
-#define END_DATA_HEADER				0x03
+#define REG_ID (0x00)
+#define REG_CONFIG1 (0x01)
+#define REG_CONFIG2 (0x02)
+#define REG_CH1SET (0x04)
+#define REG_CH2SET (0x05)
 
 
 // ADS1292R registers
@@ -62,9 +49,6 @@
 // 0x03 LOFF: COMP_TH2 COMP_TH1 COMP_TH0 1 ILEAD_OFF1 ILEAD_OFF0 0 FLEAD_OFF [0x10 on reset]
 // 0x04 CH1SET: PD1 GAIN1_2 GAIN1_1 GAIN1_0 MUX1_3 MUX1_2 MUX1_1 MUX1_0 [0x00]
 // 0x05 CH1SET: PD2 GAIN2_2 GAIN2_1 GAIN2_0 MUX2_3 MUX2_2 MUX2_1 MUX2_0 [0x00]
-
-#define REG_ID 0x00
-
 
 // The debug level set with the -d command line switch
 int debug_level = 0;
@@ -168,12 +152,13 @@ void version () {
  */
 void usage () {
 	fprintf (stderr,"\n");
-	fprintf (stderr,"Usage: ads1292r_evm [-q] [-v] [-h] [-d level] device\n");
+	fprintf (stderr,"Usage: ecg_tool [-q] [-v] [-h] [-d level] device\n");
 
 	//fprintf (stderr,"  -c channel \t Set channel. Allowed values: 11 to 26.\n");	
 	fprintf (stderr,"\n");
 	fprintf (stderr,"Options:\n");
 	fprintf (stderr,"  -d level \t Set debug level, 0 = min (default), 9 = max verbosity\n");
+	fprintf (stderr,"  -n nsample \t Number of ECG samples\n");
 	fprintf (stderr,"  -q \t Quiet mode: suppress warning messages.\n");
 	fprintf (stderr,"  -v \t Print version to stderr and exit\n");
 	fprintf (stderr,"  -h \t Display this message to stderr and exit\n");
@@ -315,17 +300,11 @@ void ecg_read_record (int fd, ecg_record_t *record) {
 	record->ch2 = (((buf[4]<<16) | (buf[5]<<8) | buf[6])<<8)/256;
 }
 
-/**
- *
- * @return The entire frame length (excluding cksum) if successful, -1 on error.
- */
-void ecg_read_temperature (int fd, int32_t *tempC100) {
-	
+void ecg_read_32bit (int fd, uint32_t *value) {
+
 	int i;
 	uint8_t c;
 	uint8_t buf[4];
-
-	debug (9, "ecg_read_record: wait for header");
 
 	// Read up to start-of-header
 	do {
@@ -334,29 +313,49 @@ void ecg_read_temperature (int fd, int32_t *tempC100) {
 		//fprintf (stderr,"%x ",c);
 	} while (c != STREAM_START);
 
-	debug (9, "ecg_read_record: data frame found");
+	debug (9, "ecg_read_32bit: data frame found");
 
 	// Check frame type (expecting type 0x02)
 	read_n_bytes (fd,&c,1);
 	if (c != 0x02) {
-		debug(1,"ecg_read_record: error: was expecting frame type 0x02, got 0x%x",c);
+		debug(1,"ecg_read_32bit: error: was expecting frame type 0x02, got 0x%x",c);
 		return;
 	}
 
-
-	// Read 32 uint32_t temperatureC100 ( C*100)
+	// Read 32 bits
 	read_n_esc_bytes (fd,buf,4);
 
-	*tempC100 = (uint32_t) ((buf[0]<<24) | (buf[1]<<16) | (buf[2]<<8) | buf[3]);
+	*value = (uint32_t) ((buf[0]<<24) | (buf[1]<<16) | (buf[2]<<8) | buf[3]);
 }
 
 
-void ecg_display_record (ecg_record_t record) {
+int ecg_register_read (int fd, int regId) {
 
+	ecg_cmd_send(fd, "CMD SDATAC");
+	ecg_cmd_send(fd, "SET MODE BINARY");
+
+	char buf[32];
+	sprintf (buf, "REGR %d\r\n", regId);
+
+	ecg_cmd_send(fd, buf);
+
+	uint32_t value;
+	ecg_read_32bit (fd, &value);
+
+	return value;
+
+}
+void ecg_register_write (int fd, int regId, int regValue) {
+	char buf[32];
+	sprintf (buf, "REGW %d %d\r\n", regId, regValue);
+	ecg_cmd_send(fd, buf);
+}
+
+void ecg_display_record (ecg_record_t record) {
 	double ch1 = (double)record.ch1 / (double)(1<<23);
 	double ch2 = (double)record.ch2 / (double)(1<<23);
-	//fprintf (stdout,"%d %d\n", record.ch1, record.ch2 );
 	fprintf (stdout,"%lf %lf\n", ch1, ch2 );
+	//fprintf (stdout,"%lf\n", ch1 );
 }
 void ecg_display_temperature (ecg_record_t record) {
 	int64_t uv = ((int64_t)record.ch1 * 2420000L) >> 23;
@@ -390,14 +389,19 @@ int ecg_cmd_send (int fd, char *cmd) {
 }
 
 int main( int argc, char **argv) {
-	int i;
+	int i,v;
 	int speed = 115200;
+	int amp_gain = -1;
+	int n_sample = 5000;
+	int mux_setting = -1;
 
 	char *device;
 	char *command;
 
 	int test_flag = 0;
 	ecg_record_t record;
+
+	char ecgcmd[32];
 
 	// Setup signal handler. Catching SIGPIPE allows for exit when 
 	// piping to Wireshark for live packet feed.
@@ -411,7 +415,7 @@ int main( int argc, char **argv) {
 
 	// Parse command line arguments. See usage() for details.
 	int c;
-	while ((c = getopt(argc, argv, "b:c:d:f:hqs:tv")) != -1) {
+	while ((c = getopt(argc, argv, "b:c:d:g:hm:n:qs:tv")) != -1) {
 		switch(c) {
 			case 'b':
 				speed = atoi (optarg);
@@ -420,6 +424,17 @@ int main( int argc, char **argv) {
 				debug_level = atoi (optarg);
 				break;
 			
+			case 'g':
+				amp_gain = atoi (optarg);
+				break;
+
+			case 'm':
+				mux_setting = atoi(optarg);
+				break;
+
+			case 'n':
+				n_sample = atoi (optarg);
+				break;
 
 			case 'h':
 				version();
@@ -482,15 +497,19 @@ int main( int argc, char **argv) {
 
 
 	
-	// Reset
-	ecg_cmd_send(fd, "Z");
-	sleep(1);
+	// Reset ECG AFE and MCU
+	//ecg_cmd_send(fd, "Z");
+	//sleep(1);
+
+	if (amp_gain > 0) {
+
+	}
 
 	if (command[0]=='t') {
 		ecg_cmd_send(fd, "SET MODE BINARY");
 		ecg_cmd_send(fd, "TEMP");
 		int32_t temperature;
-		ecg_read_temperature (fd, &temperature);
+		ecg_read_32bit (fd, &temperature);
 		fprintf (stdout, "%d\n", temperature);
 
 	} else if (command[0]=='e') {
@@ -501,16 +520,50 @@ int main( int argc, char **argv) {
 		// CH2SET = 0x05	
 		//ecg_cmd_send(fd, "WWREG 0x5 0x05");
 
+		for (i = 0; i < 8; i++) {
+			v = ecg_register_read(fd,i);
+			fprintf (stderr,"REG[%d]=%x\n", i, v);
+		}
+
+		if (mux_setting >= 0) {
+			v = ecg_register_read(fd,REG_CH1SET);
+			fprintf (stderr,"CH1SET=%d\n", v);
+			debug (9,"CH1SET=%d", v);
+			ecg_register_write (fd,REG_CH1SET, v | (mux_setting & 0x0f));
+			v = ecg_register_read(fd,REG_CH1SET);
+			fprintf (stderr,"CH1SET=%d\n", v);
+			debug (9,"CH1SET=%d", v);
+
+			v = ecg_register_read(fd,REG_CH2SET);
+			fprintf (stderr,"CH2SET=%d\n", v);
+			debug (9,"CH2SET=%d", v);
+			ecg_register_write (fd,REG_CH2SET, v | (mux_setting & 0x0f));
+			v = ecg_register_read(fd,REG_CH2SET);
+			fprintf (stderr,"CH2SET=%d\n", v);
+			debug (9,"CH2SET=%d", v);
+
+		}
+
+
 		if (test_flag) {
+			fprintf (stderr,"test on\n");
 			ecg_cmd_send(fd, "SET TEST ON");
 		}
 
-		ecg_cmd_send(fd,"ECGRN 10000 -b");
+		sprintf (ecgcmd, "ECGRN %d B", n_sample);
+fprintf (stderr,"cmd=%s\n",ecgcmd);
+		ecg_cmd_send(fd,ecgcmd);
 
-		for (i = 0; i < 10000; i++) {
+		for (i = 0; i < n_sample; i++) {
 			ecg_read_record (fd,&record);
 			ecg_display_record (record);
 			fflush(stdout);
+
+if (i%100==0) {
+	fprintf (stderr,"*");
+	fflush (stderr);
+}
+
 		}
 
 	}
