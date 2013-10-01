@@ -7633,7 +7633,6 @@ type RDH, grid 15 mm</description>
 <part name="GND7" library="supply1" deviceset="GND" device=""/>
 <part name="JP2" library="pinhead" deviceset="PINHD-1X6" device=""/>
 <part name="JP3" library="pinhead" deviceset="PINHD-2X5" device=""/>
-<part name="JP1" library="pinhead" deviceset="PINHD-1X6" device=""/>
 <part name="VDD1" library="supply1" deviceset="VDD" device=""/>
 <part name="GND3" library="supply1" deviceset="GND" device=""/>
 <part name="JP4" library="pinhead" deviceset="PINHD-1X6" device=""/>
@@ -7677,7 +7676,6 @@ type RDH, grid 15 mm</description>
 <instance part="GND7" gate="1" x="0" y="99.06"/>
 <instance part="JP2" gate="A" x="132.08" y="93.98"/>
 <instance part="JP3" gate="A" x="-48.26" y="76.2"/>
-<instance part="JP1" gate="A" x="137.16" y="30.48"/>
 <instance part="VDD1" gate="G$1" x="25.4" y="96.52"/>
 <instance part="GND3" gate="1" x="30.48" y="48.26" rot="R90"/>
 <instance part="JP4" gate="A" x="58.42" y="109.22"/>
@@ -8044,46 +8042,6 @@ type RDH, grid 15 mm</description>
 <wire x1="-63.5" y1="81.28" x2="-50.8" y2="81.28" width="0.1524" layer="91"/>
 </segment>
 </net>
-<net name="N$18" class="0">
-<segment>
-<pinref part="U$4" gate="G$1" pin="RESET"/>
-<wire x1="129.54" y1="63.5" x2="124.46" y2="63.5" width="0.1524" layer="91"/>
-<wire x1="124.46" y1="63.5" x2="124.46" y2="38.1" width="0.1524" layer="91"/>
-<pinref part="JP1" gate="A" pin="1"/>
-<wire x1="124.46" y1="38.1" x2="134.62" y2="38.1" width="0.1524" layer="91"/>
-</segment>
-</net>
-<net name="N$19" class="0">
-<segment>
-<pinref part="U$4" gate="G$1" pin="DTR/DI8"/>
-<wire x1="129.54" y1="53.34" x2="127" y2="53.34" width="0.1524" layer="91"/>
-<wire x1="127" y1="53.34" x2="127" y2="35.56" width="0.1524" layer="91"/>
-<pinref part="JP1" gate="A" pin="2"/>
-<wire x1="127" y1="35.56" x2="134.62" y2="35.56" width="0.1524" layer="91"/>
-</segment>
-</net>
-<net name="N$25" class="0">
-<segment>
-<pinref part="U$4" gate="G$1" pin="ON/SLEEP"/>
-<wire x1="177.8" y1="55.88" x2="182.88" y2="55.88" width="0.1524" layer="91"/>
-<wire x1="182.88" y1="55.88" x2="182.88" y2="17.78" width="0.1524" layer="91"/>
-<wire x1="182.88" y1="17.78" x2="124.46" y2="17.78" width="0.1524" layer="91"/>
-<wire x1="124.46" y1="17.78" x2="124.46" y2="30.48" width="0.1524" layer="91"/>
-<pinref part="JP1" gate="A" pin="4"/>
-<wire x1="124.46" y1="30.48" x2="134.62" y2="30.48" width="0.1524" layer="91"/>
-</segment>
-</net>
-<net name="N$26" class="0">
-<segment>
-<pinref part="U$4" gate="G$1" pin="CTS/DIO7"/>
-<wire x1="177.8" y1="53.34" x2="180.34" y2="53.34" width="0.1524" layer="91"/>
-<wire x1="180.34" y1="53.34" x2="180.34" y2="20.32" width="0.1524" layer="91"/>
-<wire x1="180.34" y1="20.32" x2="127" y2="20.32" width="0.1524" layer="91"/>
-<wire x1="127" y1="20.32" x2="127" y2="27.94" width="0.1524" layer="91"/>
-<pinref part="JP1" gate="A" pin="5"/>
-<wire x1="127" y1="27.94" x2="134.62" y2="27.94" width="0.1524" layer="91"/>
-</segment>
-</net>
 <net name="N$29" class="0">
 <segment>
 <pinref part="LED1" gate="G$1" pin="A"/>
@@ -8132,6 +8090,18 @@ type RDH, grid 15 mm</description>
 <pinref part="R2" gate="G$1" pin="2"/>
 <wire x1="-40.64" y1="111.76" x2="-40.64" y2="114.3" width="0.1524" layer="91"/>
 <label x="-40.64" y="114.3" size="1.778" layer="95" rot="R90" xref="yes"/>
+</segment>
+</net>
+<net name="N$28" class="0">
+<segment>
+<pinref part="U$4" gate="G$1" pin="RESET"/>
+<wire x1="129.54" y1="63.5" x2="124.46" y2="63.5" width="0.1524" layer="91"/>
+</segment>
+</net>
+<net name="N$31" class="0">
+<segment>
+<pinref part="U$4" gate="G$1" pin="DTR/DI8"/>
+<wire x1="129.54" y1="53.34" x2="127" y2="53.34" width="0.1524" layer="91"/>
 </segment>
 </net>
 </nets>
