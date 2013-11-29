@@ -157,6 +157,7 @@ void usage () {
 	//fprintf (stderr,"  -c channel \t Set channel. Allowed values: 11 to 26.\n");	
 	fprintf (stderr,"\n");
 	fprintf (stderr,"Options:\n");
+	fprintf (stderr,"  -b baud \t Set UART baud rate in bps\n");
 	fprintf (stderr,"  -d level \t Set debug level, 0 = min (default), 9 = max verbosity\n");
 	fprintf (stderr,"  -n nsample \t Number of ECG samples\n");
 	fprintf (stderr,"  -q \t Quiet mode: suppress warning messages.\n");
@@ -388,6 +389,58 @@ int ecg_cmd_send (int fd, char *cmd) {
 	return 0;
 }
 
+/**
+ * Configure ADS1x9x for ECG capture.
+ */
+int ecg_configure_for_ecg_capture (int fd, int mux_setting, int test_flag) {
+
+	int i,v;
+
+
+		// CONFIG2 = 0xA3
+		//ecg_cmd_send(fd, "WWREG 0x2 0xA3");
+
+		// CH2SET = 0x05	
+		//ecg_cmd_send(fd, "WWREG 0x5 0x05");
+
+		for (i = 0; i < 8; i++) {
+			v = ecg_register_read(fd,i);
+			fprintf (stderr,"REG[%d]=%x\n", i, v);
+		}
+
+		if (mux_setting >= 0) {
+			v = ecg_register_read(fd,REG_CH1SET);
+			fprintf (stderr,"CH1SET=%d\n", v);
+			debug (9,"CH1SET=%d", v);
+			ecg_register_write (fd,REG_CH1SET, v | (mux_setting & 0x0f));
+			v = ecg_register_read(fd,REG_CH1SET);
+			fprintf (stderr,"CH1SET=%d\n", v);
+			debug (9,"CH1SET=%d", v);
+
+			v = ecg_register_read(fd,REG_CH2SET);
+			fprintf (stderr,"CH2SET=%d\n", v);
+			debug (9,"CH2SET=%d", v);
+			ecg_register_write (fd,REG_CH2SET, v | (mux_setting & 0x0f));
+			v = ecg_register_read(fd,REG_CH2SET);
+			fprintf (stderr,"CH2SET=%d\n", v);
+			debug (9,"CH2SET=%d", v);
+
+		}
+
+
+		if (test_flag) {
+			fprintf (stderr,"test on\n");
+			ecg_cmd_send(fd, "SET TEST ON");
+		}
+
+		// This should be in the firmware
+		ecg_cmd_send(fd,"CMD START");
+		fprintf (stderr,"cmd=CMD START\n");
+
+
+
+}
+
 int main( int argc, char **argv) {
 	int i,v;
 	int speed = 115200;
@@ -514,41 +567,7 @@ int main( int argc, char **argv) {
 
 	} else if (command[0]=='e') {
 
-		// CONFIG2 = 0xA3
-		//ecg_cmd_send(fd, "WWREG 0x2 0xA3");
-
-		// CH2SET = 0x05	
-		//ecg_cmd_send(fd, "WWREG 0x5 0x05");
-
-		for (i = 0; i < 8; i++) {
-			v = ecg_register_read(fd,i);
-			fprintf (stderr,"REG[%d]=%x\n", i, v);
-		}
-
-		if (mux_setting >= 0) {
-			v = ecg_register_read(fd,REG_CH1SET);
-			fprintf (stderr,"CH1SET=%d\n", v);
-			debug (9,"CH1SET=%d", v);
-			ecg_register_write (fd,REG_CH1SET, v | (mux_setting & 0x0f));
-			v = ecg_register_read(fd,REG_CH1SET);
-			fprintf (stderr,"CH1SET=%d\n", v);
-			debug (9,"CH1SET=%d", v);
-
-			v = ecg_register_read(fd,REG_CH2SET);
-			fprintf (stderr,"CH2SET=%d\n", v);
-			debug (9,"CH2SET=%d", v);
-			ecg_register_write (fd,REG_CH2SET, v | (mux_setting & 0x0f));
-			v = ecg_register_read(fd,REG_CH2SET);
-			fprintf (stderr,"CH2SET=%d\n", v);
-			debug (9,"CH2SET=%d", v);
-
-		}
-
-
-		if (test_flag) {
-			fprintf (stderr,"test on\n");
-			ecg_cmd_send(fd, "SET TEST ON");
-		}
+		ecg_configure_for_ecg_capture(fd,mux_setting,test_flag);
 
 		sprintf (ecgcmd, "ECGRN %d B", n_sample);
 fprintf (stderr,"cmd=%s\n",ecgcmd);
