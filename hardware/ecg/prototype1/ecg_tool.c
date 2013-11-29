@@ -529,6 +529,8 @@ int main( int argc, char **argv) {
 	device = argv[optind];
 	command = argv[optind+1];
 
+	fprintf (stderr,"device=%s speed=%d command=%s n_sample=%d\n",device, speed, command,n_sample);
+
 	if (debug_level > 0) {
 		debug (1,"device=%s",device);
 	}
@@ -566,26 +568,49 @@ int main( int argc, char **argv) {
 		fprintf (stdout, "%d\n", temperature);
 
 	} else if (command[0]=='e') {
-
+		// ECG streaming command
 		ecg_configure_for_ecg_capture(fd,mux_setting,test_flag);
 
 		sprintf (ecgcmd, "ECGRN %d B", n_sample);
-fprintf (stderr,"cmd=%s\n",ecgcmd);
 		ecg_cmd_send(fd,ecgcmd);
 
 		for (i = 0; i < n_sample; i++) {
 			ecg_read_record (fd,&record);
 			ecg_display_record (record);
 			fflush(stdout);
-
-if (i%100==0) {
-	fprintf (stderr,"*");
-	fflush (stderr);
-}
-
+			if (i%100==0) {
+				fprintf (stderr,"*");
+				fflush (stderr);
+			}
 		}
 
-	}
+	} else if (command[0]=='s') {
+		// ECG capture, store and playback command
+		ecg_configure_for_ecg_capture(fd,mux_setting,test_flag);
+
+		sprintf (ecgcmd, "ECGRN %d S", n_sample);
+		ecg_cmd_send(fd,ecgcmd);
+
+
+		sleep (n_sample/500 + 2);
+
+		// Ignore anything aleady in the buffer
+		tcflush (fd,TCIFLUSH);
+
+
+		// Playback
+		ecg_cmd_send(fd,"ECGP B");
+
+		for (i = 0; i < n_sample; i++) {
+			ecg_read_record (fd,&record);
+			ecg_display_record (record);
+			fflush(stdout);
+			if (i%100==0) {
+				fprintf (stderr,"*");
+				fflush (stderr);
+			}
+		}
+	} 
 
 	ecg_close(fd);
 
