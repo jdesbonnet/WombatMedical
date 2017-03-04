@@ -32,7 +32,7 @@ public class DisplayECG extends JFrame implements Runnable,ActionListener {
 	
 	private static boolean AC_MODE = true;
 	
-	private static final double scale = 1000;
+	private static final double scale = 100000;
 	private int offset = 0;
 	
 	private Canvas canvas;
@@ -98,56 +98,22 @@ public class DisplayECG extends JFrame implements Runnable,ActionListener {
 	public void run() {
 		
 		Graphics g = canvas.getGraphics();
-		int x = 0, xm1;
+		int x = 0, y,xm1;
 		int width = canvas.getWidth();
 		int height = canvas.getHeight();
-		double[] v = new double[width];
-		int[] y = new int[width];
-		double[] movingAv = new double[256];
-		double sigmaMovingAv = 0;
-		double ma;
-		
-		while (true) {
-			
-			xm1 = x - 1;
-			if (xm1<0) {
-				xm1 = 0;
-			}
-			
-			// Erase point from last scan
-			if (fadeEnable) {
-				g.setColor(Color.white);
-				g.drawRect(x, y[x],2,2);
-			}
-			
-			v[x] = getADC();
-			
-			
-			sigmaMovingAv -= movingAv[(x+1)%movingAv.length];
-			movingAv[x % movingAv.length] = v[x];
-			sigmaMovingAv += v[x];
-			ma = sigmaMovingAv / (double)movingAv.length;
-			
-			if (AC_MODE) {
-				y[x] = height - (int)( (v[x] - ma) *scale) + offset;
-			} else {
-				y[x] = height - ( (int)(v[x]*scale) + offset);
-			}
-			if (v[x] > 1000) {
-				g.setColor(Color.red);
-			} else if (v[x] > 800){
-				g.setColor(Color.orange);
-			} else {
-				g.setColor(Color.black);
-			}
-		
-			//currentValue.setText( (fadeEnable? "Fade ":"") + v[x] + " " + y[x] + " ma=" + ma);
+		int yzero = height/2;
 
-			
-			g.drawLine( xm1 , y[xm1], 
-						x , y[x]);
-			
-			g.drawRect( x, y[x],2,2);
+		g.setColor(Color.black);
+		g.drawLine (0,0,width,0);
+		g.drawLine (0,yzero,width,yzero);
+
+		g.setColor(Color.green);
+
+		double v;
+		while (true) {
+			v = getADC();
+			y = yzero-(int)(v*scale);
+			g.drawRect( x, y,2,2);
 			x++;
 			if (x >= width) {
 				x = 0;
@@ -167,9 +133,6 @@ public class DisplayECG extends JFrame implements Runnable,ActionListener {
 	public void actionPerformed(ActionEvent e) {
 		String cmd = e.getActionCommand();
 		System.err.println ("cmd=" + cmd);
-		if ("fade".equals(cmd)) {
-			fadeEnable = !fadeEnable;
-		}
 		if ("clear".equals(cmd)) {
 			canvas.getGraphics().clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
 		}

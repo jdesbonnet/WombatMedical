@@ -45,15 +45,24 @@
 		},
 		addData : function (v) {
 
+			if ( ! isNumber(v) ) {
+				return;
+			}
+
+			var y = (chartY0 + chartHeight/2) - v*200 ;
+			if (y<chartY0) y=chartY0;
+			if (y>(chartY0+chartHeight)) y=chartY0+chartHeight;
+
+
 			var endPtr = (dataStartPtr + dataLen) % dataBufSize;
 			var el = dataPtEls[endPtr];
 			if (el==null) {
-				dataPtEls[endPtr] = createDataPointEl (chartX0+chartWidth,v);
+				dataPtEls[endPtr] = createDataPointEl (chartX0+chartWidth,y);
 				svgEl.appendChild(dataPtEls[endPtr]);
 				dataLen++;
 			} else {
 				dataPtEls[endPtr].setAttribute("x",chartX0+chartWidth-4);
-				dataPtEls[endPtr].setAttribute("y",v);
+				dataPtEls[endPtr].setAttribute("y",y);
 			}
 			
 			if (dataLen === dataBufSize) {
@@ -69,7 +78,10 @@
 		},
 		stop: function () {
 			clearInterval(scrollInterval);
-		}
+		},
+		scroll : function () {
+			scroll();
+		},
 					
 	};
 	 
@@ -135,6 +147,16 @@
 		drawEl.setAttribute("fill","none");
 		drawEl.setAttribute("stroke","black");
 		svgEl.appendChild(drawEl);
+
+		// Draw y=0 line
+		var zeroLineEl = document.createElementNS("http://www.w3.org/2000/svg", "line");
+		zeroLineEl.setAttribute("x1",chartX0);
+		zeroLineEl.setAttribute("y1",chartY0 + chartHeight/2);
+		zeroLineEl.setAttribute("x2",chartX0+chartWidth);
+		zeroLineEl.setAttribute("y2",chartY0 + chartHeight/2);
+		zeroLineEl.setAttribute("stroke","black");
+		svgEl.appendChild(zeroLineEl);
+
 	}
 
 	function createDataPointEl (x,y) {
@@ -148,6 +170,10 @@
 		return ptEl;
 	}
 
+
+	function isNumber(n) {
+		return !isNaN(parseFloat(n)) && isFinite(n);
+	}
 
 
 })( jQuery );

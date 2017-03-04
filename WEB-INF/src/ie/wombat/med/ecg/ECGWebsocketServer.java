@@ -47,7 +47,7 @@ public class ECGWebsocketServer extends WebSocketServer {
 	}
 
 	public static void main( String[] args ) throws InterruptedException , IOException {
-		WebSocketImpl.DEBUG = true;
+		WebSocketImpl.DEBUG = false;
 		int port = 8887; // 843 flash policy port
 		try {
 			port = Integer.parseInt( args[ 0 ] );
@@ -58,9 +58,22 @@ public class ECGWebsocketServer extends WebSocketServer {
 		System.out.println( "ECGWebsocketServer started on port: " + s.getPort() );
 
 		BufferedReader sysin = new BufferedReader( new InputStreamReader( System.in ) );
-		while ( true ) {
-			String in = sysin.readLine();
+		String in;
+		long t = System.currentTimeMillis();
+		long dt;
+		long sps = 0;
+		int i = 0;
+		while ( (in = sysin.readLine()) != null ) {
 			s.sendToAll( in );
+			System.err.print (in);
+			System.err.print (" sps=" + sps);
+			System.err.println ("");
+			i++;
+			if (i % 1000 == 0) {
+				dt = System.currentTimeMillis() - t;
+				sps = 1000000L/dt;
+				t = System.currentTimeMillis();
+			}
 		}
 	}
 

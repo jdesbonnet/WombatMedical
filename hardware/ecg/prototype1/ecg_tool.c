@@ -392,53 +392,58 @@ int ecg_cmd_send (int fd, char *cmd) {
 /**
  * Configure ADS1x9x for ECG capture.
  */
-int ecg_configure_for_ecg_capture (int fd, int mux_setting, int test_flag) {
+int ecg_configure_for_ecg_capture (int fd, int mux_setting) {
 
 	int i,v;
 
 
-		// CONFIG2 = 0xA3
-		//ecg_cmd_send(fd, "WWREG 0x2 0xA3");
+	// CONFIG2 = 0xA3
+	//ecg_cmd_send(fd, "WWREG 0x2 0xA3");
 
-		// CH2SET = 0x05	
-		//ecg_cmd_send(fd, "WWREG 0x5 0x05");
-
-		for (i = 0; i < 8; i++) {
-			v = ecg_register_read(fd,i);
-			fprintf (stderr,"REG[%d]=%x\n", i, v);
-		}
-
-		if (mux_setting >= 0) {
-			v = ecg_register_read(fd,REG_CH1SET);
-			fprintf (stderr,"CH1SET=%d\n", v);
-			debug (9,"CH1SET=%d", v);
-			ecg_register_write (fd,REG_CH1SET, v | (mux_setting & 0x0f));
-			v = ecg_register_read(fd,REG_CH1SET);
-			fprintf (stderr,"CH1SET=%d\n", v);
-			debug (9,"CH1SET=%d", v);
-
-			v = ecg_register_read(fd,REG_CH2SET);
-			fprintf (stderr,"CH2SET=%d\n", v);
-			debug (9,"CH2SET=%d", v);
-			ecg_register_write (fd,REG_CH2SET, v | (mux_setting & 0x0f));
-			v = ecg_register_read(fd,REG_CH2SET);
-			fprintf (stderr,"CH2SET=%d\n", v);
-			debug (9,"CH2SET=%d", v);
-
-		}
+	// CH2SET = 0x05	
+	//ecg_cmd_send(fd, "WWREG 0x5 0x05");
 
 
-		if (test_flag) {
-			fprintf (stderr,"test on\n");
-			ecg_cmd_send(fd, "SET TEST ON");
-		}
+	// Set inter-record delay
+	ecg_cmd_send(fd,"SET CONFIG 0 100000");
 
-		// This should be in the firmware
-		ecg_cmd_send(fd,"CMD START");
-		fprintf (stderr,"cmd=CMD START\n");
+	for (i = 0; i < 8; i++) {
+		v = ecg_register_read(fd,i);
+		fprintf (stderr,"REG[%d]=%x\n", i, v);
+	}
+
+/*
+	if (mux_setting >= 0) {
+		v = ecg_register_read(fd,REG_CH1SET);
+		fprintf (stderr,"CH1SET=%d\n", v);
+		debug (9,"CH1SET=%d", v);
+		ecg_register_write (fd,REG_CH1SET, v | (mux_setting & 0x0f));
+		v = ecg_register_read(fd,REG_CH1SET);
+		fprintf (stderr,"CH1SET=%d\n", v);
+		debug (9,"CH1SET=%d", v);
+
+		v = ecg_register_read(fd,REG_CH2SET);
+		fprintf (stderr,"CH2SET=%d\n", v);
+		debug (9,"CH2SET=%d", v);
+		ecg_register_write (fd,REG_CH2SET, v | (mux_setting & 0x0f));
+		v = ecg_register_read(fd,REG_CH2SET);
+		fprintf (stderr,"CH2SET=%d\n", v);
+		debug (9,"CH2SET=%d", v);
+
+	}
+*/
+
+	fprintf (stderr,"REGW 4 0\n");
+	ecg_cmd_send(fd,"REGW 4 0");
+
+	fprintf (stderr,"CMD OFFSETCAL\n");
+	ecg_cmd_send(fd,"CMD OFFSETCAL");
+	sleep(1);
 
 
-
+	// This should be in the firmware
+	ecg_cmd_send(fd,"CMD START");
+	fprintf (stderr,"CMD START\n");
 }
 
 int main( int argc, char **argv) {
@@ -569,7 +574,7 @@ int main( int argc, char **argv) {
 
 	} else if (command[0]=='e') {
 		// ECG streaming command
-		ecg_configure_for_ecg_capture(fd,mux_setting,test_flag);
+		ecg_configure_for_ecg_capture(fd,mux_setting);
 
 		sprintf (ecgcmd, "ECGRN %d B", n_sample);
 		ecg_cmd_send(fd,ecgcmd);
@@ -586,7 +591,7 @@ int main( int argc, char **argv) {
 
 	} else if (command[0]=='s') {
 		// ECG capture, store and playback command
-		ecg_configure_for_ecg_capture(fd,mux_setting,test_flag);
+		ecg_configure_for_ecg_capture(fd,mux_setting);
 
 		sprintf (ecgcmd, "ECGRN %d S", n_sample);
 		ecg_cmd_send(fd,ecgcmd);
