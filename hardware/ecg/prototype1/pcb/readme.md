@@ -4,6 +4,20 @@
 
 ![pcb layout](./ecg_brd.png)
 
+
+## Notes
+
+JP2 is UART, used for issuing commands, downloading data and upgrading firmware. Firmware updates require the MCU to enter bootloader mode at startup using the CTS, RTS lines (connected to RESET and ISP_MODE pins).
+
+JP4 is a convenient point to access the SPI bus from MCU to ECG front end IC. Pin 1 = DOUT, pin 2 = DIN, pin 3 = SCLK, pin 4 CS. Pin 5, 6 was NC 
+on the PCB but on prototype bodge wire was used to connect VCC and GND. 
+
+JP3 analog ECG lines. Pin 1 = RLDOUT, pin 2 = IN1N, pin 3 = IN1P.
+
+JP5 power.
+
+## Bugs
+
 There were some bugs on the board:
 
 1. ADS1929R missing crucial feedback from RLDOUT via 1Mohm resistor with 1.5nF capacitor in parallel with resistor.
