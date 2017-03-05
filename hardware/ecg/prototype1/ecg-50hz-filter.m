@@ -1,6 +1,8 @@
 #!/usr/bin/env octave -q
 #
 # Remove 50Hz mains noise from ECG. Assuming 500sps sample rate.
+# This video was helpful in writing this script:
+# https://www.youtube.com/watch?v=r7ypfE5TQK0
 #
 # Command line:
 # octave  ecg-50hz-filter.m  ecg.dat ecg-filtered.dat > /dev/null
