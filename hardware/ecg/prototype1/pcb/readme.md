@@ -7,7 +7,7 @@
 
 ## Notes
 
-JP2 is UART, used for issuing commands, downloading data and upgrading firmware. Firmware updates require the MCU to enter bootloader mode at startup using the CTS, RTS lines (connected to RESET and ISP_MODE pins).
+JP2 is UART, used for issuing commands, downloading data and upgrading firmware. Firmware updates require the MCU to enter bootloader mode at startup using the CTS, RTS lines (connected to RESET and ISP_MODE pins). Pin 1 = GND, pin 2 = ISPEnter, pin 3 = Vdd, pin 4 = TXD, pin 5 = RXD, pin 6 = RESET.
 
 JP4 is a convenient point to access the SPI bus from MCU to ECG front end IC. Pin 1 = DOUT, pin 2 = DIN, pin 3 = SCLK, pin 4 CS. Pin 5, 6 was NC 
 on the PCB but on prototype bodge wire was used to connect VCC and GND. 
