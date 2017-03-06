@@ -33,7 +33,6 @@ Ref datasheet figure 52. Not clear if this bug could have been worked around in 
 
 ## Firmware
 
-Firmware is available at this repository. NB: on the ads1292r-with-sram branch: *not* master branch.
-
+Firmware is available at this repository:
 https://github.com/jdesbonnet/LPC1114_ECG_firmware
 
