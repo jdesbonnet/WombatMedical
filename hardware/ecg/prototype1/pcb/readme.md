@@ -31,6 +31,15 @@ Ref datasheet figure 52. Not clear if this bug could have been worked around in 
 
 4. It was a mistake not to break out a Serial Wire Debug header.
 
+## Notes for next version
+
+* Move to ARM Cortex-M0+ MCU eg LPC824
+* Add SPI flash chip for storage
+* Crystal for more accurate off-line time keeping
+* Modular radio (allow for RFMxx, or ESP-0x or bluetooth modules)
+* Smaller PCB area, thinner (all SMD).
+* Use 3.5mm audio jack for 3 wire ECG connector
+
 ## Firmware
 
 Firmware is available at this repository:
